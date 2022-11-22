@@ -8,15 +8,19 @@ public class GraphicsPipeline : MonoBehaviour
 {
     Texture2D ourTexture;
     Outcode inScreen = new Outcode();
+    Model myModel;
+    Renderer screen;
+    float z = 10;
+    float angle;
     void Start()
     {
         ourTexture = new Texture2D(256, 256);
-        Renderer screen = FindObjectOfType<Renderer>();
+        screen = FindObjectOfType<Renderer>();
         screen.material.mainTexture = ourTexture;
-        Model my_Model = new Model();
+        myModel = new Model();
         //my_Model.CreateUnityGameObject();
 
-        List<Vector3> verts = my_Model.vertices;
+        List<Vector3> verts = myModel.vertices;
         printVerts(verts);
 
         //Rotation Matrix
@@ -119,12 +123,6 @@ public class GraphicsPipeline : MonoBehaviour
         //Trivial Acceptance (True)
         Vector2 a = new Vector2(0.5f, 0.8f);
         Vector2 b = new Vector2(0.2f, 0.2f);
-
-        if (lineClip(ref a , ref b))
-        {
-            plot(breshnamsLine(Convert(a), Convert(b)));
-        }
-
         bool trivial_accept = lineClip(ref a, ref b);
         if(trivial_accept)
         {
@@ -153,12 +151,50 @@ public class GraphicsPipeline : MonoBehaviour
         {
             print("Rejected");
         }
+    }
 
-        List<Vector2Int> list = breshnamsLine(new Vector2Int(15, 150), new Vector2Int(100, 43));
+    private void Update()
+    {
+        List<Vector3> newVerts = myModel.vertices;
 
-        foreach(Vector2Int v in list)
+        Matrix4x4 translation = Matrix4x4.TRS(new Vector3(0, 0, z), Quaternion.identity, Vector3.one);
+        Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, Quaternion.AngleAxis(angle, Vector3.right), Vector3.one);
+        Matrix4x4 projection = Matrix4x4.Perspective(90, 1, 1, 1000);
+
+        Matrix4x4 bothTransforms = projection * rotation * translation;
+
+        List<Vector3> newImage = getImage(newVerts, bothTransforms);
+
+        z += 0.05f;
+        angle++;
+
+        if(ourTexture)
         {
-            print(v);
+            Destroy(ourTexture);
+        }
+
+        ourTexture = new Texture2D(256, 256);
+        screen.material.mainTexture = ourTexture;
+
+        foreach (Vector3Int face in myModel.faces)
+        {
+            drawLine(newImage[face.x], newImage[face.y]);
+            drawLine(newImage[face.y], newImage[face.z]);
+            drawLine(newImage[face.z], newImage[face.x]);
+        }
+    }
+
+    private void drawLine(Vector3 v1, Vector3 v2)
+    {
+        Vector2 vect = new Vector2(v1.x / v1.z, v1.y / v1.z);
+        Vector2 vect2 = new Vector2(v2.x / v2.z, v2.y / v2.z);
+
+        if ((v1.z < 0) && (v2.z < 0))
+        {
+            if (lineClip(ref vect, ref vect2))
+            {
+                plot(breshnamsLine(Convert(vect), Convert(vect2)));
+            }
         }
     }
 
