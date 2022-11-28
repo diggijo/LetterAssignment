@@ -11,6 +11,7 @@ public class GraphicsPipeline : MonoBehaviour
     Model myModel;
     Renderer screen;
     float z = 10;
+    int count = 0;
     float angle;
     void Start()
     {
@@ -158,14 +159,14 @@ public class GraphicsPipeline : MonoBehaviour
         List<Vector3> newVerts = myModel.vertices;
 
         Matrix4x4 translation = Matrix4x4.TRS(new Vector3(0, 0, z), Quaternion.identity, Vector3.one);
-        Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, Quaternion.AngleAxis(angle, Vector3.right), Vector3.one);
+        Matrix4x4 rotation = Matrix4x4.TRS(Vector3.zero, Quaternion.AngleAxis(angle, Vector3.up), Vector3.one);
         Matrix4x4 projection = Matrix4x4.Perspective(90, 1, 1, 1000);
 
         Matrix4x4 bothTransforms = projection * rotation * translation;
 
         List<Vector3> newImage = getImage(newVerts, bothTransforms);
 
-        z += 0.05f;
+        //z += 0.05f;
         angle++;
 
         if(ourTexture)
@@ -178,9 +179,22 @@ public class GraphicsPipeline : MonoBehaviour
 
         foreach (Vector3Int face in myModel.faces)
         {
-            drawLine(newImage[face.x], newImage[face.y]);
-            drawLine(newImage[face.y], newImage[face.z]);
-            drawLine(newImage[face.z], newImage[face.x]);
+            Vector3 v = newImage[face.y] - newImage[face.x];
+
+            Vector3 vect1 = newImage[face.x];
+            Vector3 vect2 = newImage[face.y];
+            Vector3 vect3 = newImage[face.z];
+
+            Vector2 v1 = new Vector2(vect1.x / vect1.z, vect1.y / vect1.z);
+            Vector2 v2 = new Vector2(vect2.x / vect2.z, vect2.y / vect2.z);
+            Vector2 v3 = new Vector2(vect3.x / vect3.z, vect3.y / vect3.z);
+
+            if (Vector3.Cross(v2 - v1, v3-v2).z > 0)
+            {
+                drawLine(newImage[face.x], newImage[face.y]);
+                drawLine(newImage[face.y], newImage[face.z]);
+                drawLine(newImage[face.z], newImage[face.x]);
+            }
         }
     }
 
@@ -188,8 +202,8 @@ public class GraphicsPipeline : MonoBehaviour
     {
         Vector2 vect = new Vector2(v1.x / v1.z, v1.y / v1.z);
         Vector2 vect2 = new Vector2(v2.x / v2.z, v2.y / v2.z);
-
-        if ((v1.z < 0) && (v2.z < 0))
+        print(v1.z.ToString() + "     " + v2.z.ToString());
+        if ((v1.z < -1) && (v2.z < -1))
         {
             if (lineClip(ref vect, ref vect2))
             {
@@ -243,7 +257,11 @@ public class GraphicsPipeline : MonoBehaviour
     }
 
     private bool lineClip(ref Vector2 start, ref Vector2 end)
+     
+
     {
+        print(count);
+        count++;
         Outcode start_outcode = new Outcode(start);
         Outcode end_outcode = new Outcode(end);
 
@@ -265,14 +283,15 @@ public class GraphicsPipeline : MonoBehaviour
         }
 
         List<Vector2> intersection_points = intersectEdge(start, end, start_outcode);
-
+        
+        
         foreach (Vector2 v in intersection_points)
         {
             Outcode v_outcode = new Outcode(v);
             if (v_outcode == inScreen)
             {
                 start = v;
-                lineClip(ref start, ref end);
+                return lineClip(ref start, ref end);
             }
         }
 
@@ -286,12 +305,12 @@ public class GraphicsPipeline : MonoBehaviour
 
         if(pointOutcode.up)
         {
-            intersections.Add(new Vector2(start.x + 1/m * (1 - start.y) , 1));
+            intersections.Add(new Vector2(start.x + (1/m) * (1 - start.y) , 1));
         }
 
         if (pointOutcode.down)
         {
-            intersections.Add(new Vector2(start.x + 1 / m * (-1 - start.y), -1));
+            intersections.Add(new Vector2(start.x + (1 / m)  * (-1 - start.y), -1));
         }
 
         if (pointOutcode.left)
@@ -403,4 +422,43 @@ public class GraphicsPipeline : MonoBehaviour
     {
         return new Vector2Int((int)(255 * (v.x + 1) / 2), (int)(255 * (v.y + 1) / 2));
     }
+
+    //filling a triangle
+    //scan line algorithms
+
+    private void scanLine(Vector3 a, Vector3 b, Vector3 c, Color color)
+    {
+        // Sort the points so that y0 <= y1 <= y2
+        if (b.y < a.y)
+        {
+            scanLine(b, a, c, color);
+        }
+
+        if (c.y < a.y)
+        {
+            scanLine(c, a, b, color);
+        }
+
+        if (c.y < b.y)
+        {
+            scanLine(a, c, b, color);
+        }
+    }
+
+    private void fill(Vector2 point)
+    {
+        //Vector2 centre = (a + b + c) / 3;
+
+        /*
+         * if(point != red)
+         * {
+         *      SetPixel(Point, red);
+         *      Fill(Point + Up);
+         *      Fill(Point + Down);
+         *      Fill(Point + Left);
+         *      Fill(point + right);
+         * }
+         * */
+    }
+
 }
