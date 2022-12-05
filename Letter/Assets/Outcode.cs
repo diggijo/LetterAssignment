@@ -41,7 +41,7 @@ public class Outcode
     }
     public static Outcode operator +(Outcode A, Outcode B)
     {
-        return new Outcode(A.up || B.up, A.down && B.down, A.left && B.left, A.right && B.right);
+        return new Outcode(A.up || B.up, A.down || B.down, A.left || B.left, A.right || B.right);
     }
 
 
