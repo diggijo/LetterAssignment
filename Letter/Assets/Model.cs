@@ -21,7 +21,7 @@ public class Model
     {
         //Front
         faces.Add(new Vector3Int(1, 0, 2));
-        faces.Add(new Vector3Int(1, 2, 5));
+        /*faces.Add(new Vector3Int(1, 2, 5));
         faces.Add(new Vector3Int(4, 3, 10));
         faces.Add(new Vector3Int(4, 10, 11));
         faces.Add(new Vector3Int(10, 13, 11));
@@ -81,7 +81,7 @@ public class Model
         faces.Add(new Vector3Int(4, 18, 19));
         faces.Add(new Vector3Int(4, 19, 5));
         faces.Add(new Vector3Int(3, 2, 16));
-        faces.Add(new Vector3Int(3, 16, 17));
+        faces.Add(new Vector3Int(3, 16, 17));*/
     }
 
     private void addVertices()
