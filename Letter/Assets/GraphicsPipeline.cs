@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -11,7 +9,6 @@ public class GraphicsPipeline : MonoBehaviour
     Model myModel;
     Renderer screen;
     float z = 10;
-    int count = 0;
     float angle;
     void Start()
     {
@@ -167,7 +164,7 @@ public class GraphicsPipeline : MonoBehaviour
         List<Vector3> newImage = getImage(newVerts, bothTransforms);
 
         //z += 0.05f;
-        angle++;
+        //angle++;
 
         if(ourTexture)
         {
@@ -182,8 +179,11 @@ public class GraphicsPipeline : MonoBehaviour
             Vector3 v = newImage[face.y] - newImage[face.x];
 
             Vector3 vect1 = newImage[face.x];
+            print(vect1);
             Vector3 vect2 = newImage[face.y];
+            print(vect2);
             Vector3 vect3 = newImage[face.z];
+            print(vect3);
 
             Vector2 v1 = new Vector2(vect1.x / vect1.z, vect1.y / vect1.z);
             Vector2 v2 = new Vector2(vect2.x / vect2.z, vect2.y / vect2.z);
@@ -191,9 +191,11 @@ public class GraphicsPipeline : MonoBehaviour
 
             if (Vector3.Cross(v2 - v1, v3-v2).z > 0)
             {
-                drawLine(newImage[face.x], newImage[face.y]);
-                drawLine(newImage[face.y], newImage[face.z]);
-                drawLine(newImage[face.z], newImage[face.x]);
+                drawLine(vect1, vect2);
+                drawLine(vect2, vect3);
+                drawLine(vect3, vect1);
+
+                Vector2 centrePoint = centre(vect1, vect2, vect3);
             }
         }
     }
@@ -202,7 +204,7 @@ public class GraphicsPipeline : MonoBehaviour
     {
         Vector2 vect = new Vector2(v1.x / v1.z, v1.y / v1.z);
         Vector2 vect2 = new Vector2(v2.x / v2.z, v2.y / v2.z);
-        print(v1.z.ToString() + "     " + v2.z.ToString());
+
         if ((v1.z < -1) && (v2.z < -1))
         {
             if (lineClip(ref vect, ref vect2))
@@ -257,11 +259,7 @@ public class GraphicsPipeline : MonoBehaviour
     }
 
     private bool lineClip(ref Vector2 start, ref Vector2 end)
-     
-
     {
-        print(count);
-        count++;
         Outcode start_outcode = new Outcode(start);
         Outcode end_outcode = new Outcode(end);
 
@@ -423,42 +421,15 @@ public class GraphicsPipeline : MonoBehaviour
         return new Vector2Int((int)(255 * (v.x + 1) / 2), (int)(255 * (v.y + 1) / 2));
     }
 
-    //filling a triangle
-    //scan line algorithms
-
-    private void scanLine(Vector3 a, Vector3 b, Vector3 c, Color color)
+    private Vector2 centre(Vector2 a, Vector2 b, Vector2 c)
     {
-        // Sort the points so that y0 <= y1 <= y2
-        if (b.y < a.y)
-        {
-            scanLine(b, a, c, color);
-        }
+        Vector2 centre = new Vector2((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3);
 
-        if (c.y < a.y)
-        {
-            scanLine(c, a, b, color);
-        }
-
-        if (c.y < b.y)
-        {
-            scanLine(a, c, b, color);
-        }
+        return centre;
     }
 
-    private void fill(Vector2 point)
+    private void floodFill(Color newColor, Color oldColor)
     {
-        //Vector2 centre = (a + b + c) / 3;
 
-        /*
-         * if(point != red)
-         * {
-         *      SetPixel(Point, red);
-         *      Fill(Point + Up);
-         *      Fill(Point + Down);
-         *      Fill(Point + Left);
-         *      Fill(point + right);
-         * }
-         * */
     }
-
 }
