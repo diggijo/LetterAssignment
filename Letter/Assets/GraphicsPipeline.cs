@@ -117,7 +117,7 @@ public class GraphicsPipeline : MonoBehaviour
         outcodeDR.printOutcode(outcodeDR);
 
 
-
+        /*
         //Trivial Acceptance (True)
         Vector2 a = new Vector2(0.5f, 0.8f);
         Vector2 b = new Vector2(0.2f, 0.2f);
@@ -148,7 +148,7 @@ public class GraphicsPipeline : MonoBehaviour
         else
         {
             print("Rejected");
-        }
+        }*/
     }
 
     private void Update()
@@ -163,10 +163,10 @@ public class GraphicsPipeline : MonoBehaviour
 
         List<Vector3> newImage = getImage(newVerts, bothTransforms);
 
-        //z += 0.05f;
-        //angle++;
+        z += 0.05f;
+        angle++;
 
-        if(ourTexture)
+        if (ourTexture)
         {
             Destroy(ourTexture);
         }
@@ -179,11 +179,8 @@ public class GraphicsPipeline : MonoBehaviour
             Vector3 v = newImage[face.y] - newImage[face.x];
 
             Vector3 vect1 = newImage[face.x];
-            print(vect1);
             Vector3 vect2 = newImage[face.y];
-            print(vect2);
             Vector3 vect3 = newImage[face.z];
-            print(vect3);
 
             Vector2 v1 = new Vector2(vect1.x / vect1.z, vect1.y / vect1.z);
             Vector2 v2 = new Vector2(vect2.x / vect2.z, vect2.y / vect2.z);
@@ -195,7 +192,11 @@ public class GraphicsPipeline : MonoBehaviour
                 drawLine(vect2, vect3);
                 drawLine(vect3, vect1);
 
-                Vector2 centrePoint = centre(vect1, vect2, vect3);
+                Vector2Int centrePoint = centre(v1, v2, v3);
+                Color c = ourTexture.GetPixel(centrePoint.x, centrePoint.y);
+
+                //floodFill(centrePoint.x, centrePoint.y, Color.black, c);
+                floodFillStack(centrePoint.x, centrePoint.y);
             }
         }
     }
@@ -421,15 +422,55 @@ public class GraphicsPipeline : MonoBehaviour
         return new Vector2Int((int)(255 * (v.x + 1) / 2), (int)(255 * (v.y + 1) / 2));
     }
 
-    private Vector2 centre(Vector2 a, Vector2 b, Vector2 c)
+    private Vector2Int centre(Vector2 a, Vector2 b, Vector2 c)
     {
-        Vector2 centre = new Vector2((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3);
+        Vector2 centreV2 = new Vector2((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3);
+        Vector2Int centre = Convert(centreV2);
 
         return centre;
     }
 
-    private void floodFill(Color newColor, Color oldColor)
-    {
 
+    //simpledevcode.wordpress.com/2015/12/29/flood-fill-algorithm-using-c-net/#:~:text=Simply%20put%2C%20the%20flood%20fill,a%20pixel%20has%20been%20visited.
+    //Creates a stack overflow, unsure how to fix. Recursion never ends for bottom faces.
+    //Slows down the whole project.
+    private void floodFill(int x, int y, Color newColor, Color oldColor)
+    {
+        if (ourTexture.GetPixel(x, y) == oldColor)
+        {
+            ourTexture.SetPixel(x, y, newColor);
+            floodFill(x + 1, y, newColor, oldColor);
+            floodFill(x, y + 1, newColor, oldColor);
+            floodFill(x - 1, y, newColor, oldColor);
+            floodFill(x, y - 1, newColor, oldColor);
+        }
+
+        ourTexture.Apply();
+    }
+
+    private void floodFillStack(int x, int y)
+    {
+        Stack<Vector2Int> pixels = new Stack<Vector2Int>();
+        Color oldColour = ourTexture.GetPixel(x, y);
+        Color newColour = Color.green;
+        pixels.Push(new Vector2Int(x, y));
+
+        while (pixels.Count > 0)
+        {
+            Vector2Int v = pixels.Pop();
+            if(v.x < ourTexture.width && v.x > 0 && v.y < ourTexture.height && v.y > 0)
+            {
+                if(ourTexture.GetPixel(v.x, v.y) == oldColour)
+                {
+                    ourTexture.SetPixel(v.x, v.y, newColour);
+                    pixels.Push(new Vector2Int(v.x - 1, v.y));
+                    pixels.Push(new Vector2Int(v.x + 1, v.y));
+                    pixels.Push(new Vector2Int(v.x, v.y - 1));
+                    pixels.Push(new Vector2Int(v.x, v.y + 1));
+                }
+            }
+        }
+
+        ourTexture.Apply();
     }
 }
